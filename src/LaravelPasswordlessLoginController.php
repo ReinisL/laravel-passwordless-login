@@ -2,8 +2,8 @@
 
 namespace Grosv\LaravelPasswordlessLogin;
 
-use Grosv\LaravelPasswordlessLogin\Exceptions\InvalidSignatureException;
 use Grosv\LaravelPasswordlessLogin\Exceptions\ExpiredSignatureException;
+use Grosv\LaravelPasswordlessLogin\Exceptions\InvalidSignatureException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Routing\UrlGenerator;
@@ -42,16 +42,16 @@ class LaravelPasswordlessLoginController extends Controller
      */
     public function login(Request $request)
     {
-        if (!$this->urlGenerator->hasCorrectSignature($request) ||
-            ($this->urlGenerator->signatureHasNotExpired($request) && !$this->passwordlessLoginService->requestIsNew())) {
+        $user = $this->passwordlessLoginService->getUser();
+
+        if (! $this->urlGenerator->hasCorrectSignature($request) ||
+            ($this->urlGenerator->signatureHasNotExpired($request) && ! $this->passwordlessLoginService->requestIsNew($user))) {
             throw new InvalidSignatureException();
-        } else if (!$this->urlGenerator->signatureHasNotExpired($request)) {
+        } elseif (! $this->urlGenerator->signatureHasNotExpired($request)) {
             throw new ExpiredSignatureException();
         }
 
-        $this->passwordlessLoginService->cacheRequest($request);
-
-        $user = $this->passwordlessLoginService->user;
+        $this->passwordlessLoginService->cacheRequest($request, $user);
 
         $guard = $user->guard_name ?? config('laravel-passwordless-login.user_guard');
 

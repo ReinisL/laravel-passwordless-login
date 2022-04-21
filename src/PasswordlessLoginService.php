@@ -13,18 +13,12 @@ use Illuminate\Support\Facades\Auth;
 class PasswordlessLoginService
 {
     /**
-     * @var User
-     */
-    public $user;
-
-    /**
      * @var string
      */
     private $cacheKey;
 
     public function __construct()
     {
-        $this->user = $this->getUser();
         $this->cacheKey = \request('user_type').\request('expires');
     }
 
@@ -35,7 +29,8 @@ class PasswordlessLoginService
      */
     public function usesTrait(): bool
     {
-        $traits = class_uses($this->user, true);
+        $user = $this->getUser();
+        $traits = class_uses($user, true);
 
         return in_array(PasswordlessLogin::class, $traits);
     }
@@ -61,10 +56,10 @@ class PasswordlessLoginService
      *
      * @throws \Exception
      */
-    public function cacheRequest(Request $request)
+    public function cacheRequest(Request $request, User $user)
     {
         if ($this->usesTrait()) {
-            $routeExpiration = $this->user->login_route_expires_in;
+            $routeExpiration = $user->login_route_expires_in;
         } else {
             $routeExpiration = config('laravel-passwordless-login.login_route_expires');
         }
@@ -81,15 +76,15 @@ class PasswordlessLoginService
      *
      * @return bool
      */
-    public function requestIsNew(): bool
+    public function requestIsNew(User $user): bool
     {
         if ($this->usesTrait()) {
-            $loginOnce = $this->user->login_use_once;
+            $loginOnce = $user->login_use_once;
         } else {
             $loginOnce = config('laravel-passwordless-login.login_use_once');
         }
 
-        if (!$loginOnce || !cache()->has($this->cacheKey)) {
+        if (! $loginOnce || ! cache()->has($this->cacheKey)) {
             return true;
         } else {
             return false;
