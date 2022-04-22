@@ -51,10 +51,11 @@ class LoginUrl
             $this->route_name,
             $this->route_expires,
             [
-                'uid'           => $this->user->getAuthIdentifier(),
-                'redirect_to'   => $this->redirect_url,
-                'user_type'     => UserClass::toSlug(get_class($this->user)),
-            ]
+                'uid' => $this->user->getAuthIdentifier(),
+                'redirect_to' => $this->redirect_url,
+                'user_type' => UserClass::toSlug(get_class($this->user)),
+            ],
+            false
         );
     }
 }
